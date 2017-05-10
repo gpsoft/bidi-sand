@@ -8,7 +8,9 @@
               [url (if (coll? url)
                      (apply bb/match-route (concat [rt] url))
                      (bb/match-route rt url))])]
+    (println "ROUTES:")
     (clojure.pprint/pprint rt)
+    (println "URL & RESULT:")
     (clojure.pprint/pprint res)))
 
 (try-match
@@ -61,3 +63,16 @@
   ["/foo/db.hoge%2FPiyo/bar"])
 
 (bb/path-for ["/" {["foo/" [keyword :db/ident] "/bar"] :index}] :index :db/ident :hoge/Hoge)
+
+
+
+(try-match
+  ["/" {#{"index.html" "index"} :index}]
+  ["/index.html"
+   "/index"])
+
+(bb/path-for ["/" {#{"index.html" "index"} :index}] :index)
+
+
+
+
