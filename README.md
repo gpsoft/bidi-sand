@@ -18,6 +18,7 @@ routingと逆引きに特化したライブラリ。
     (require '[bidi.bidi :as bb])
            ;; functions:
            ;;   bb/match-route
+           ;;   bb/match-route*
            ;;   bb/path-for
            ;;   bb/tag
            ;;   bb/route-seq
@@ -108,9 +109,10 @@ routingと逆引きに特化したライブラリ。
       :scheme "https"} {"about.html" :about}]
     ;; https://github.com/ring-clojure/ring/wiki/Concepts
 
-この場合、`bb/match-url`の引数には、URL以外のリクエスト属性を指定する必要がある。
+この場合、`bb/match-url`の引数には、URL以外のリクエスト属性を指定する必要がある。あるいは`bb/match-url*`を使って、リクエストマップを引数に追加。
 
-    (bb/match-url "/index.html" :request-method :get ....)
+    (bb/match-url routes "/index.html" :request-method :get ....)
+    (bb/match-url* routes "/index.html" req)
 
 さらに例。
 
@@ -171,9 +173,47 @@ routingと逆引きに特化したライブラリ。
 
 # Ringで使う
 ## ハンドラ
+
+    (require '[bidi.ring :as br])
+           ;; functions
+           ;;   br/make-handler
+           ;; records
+           ;;   br/Redirect
+
+    (def routes
+      ["/index.html" handler-index]
+      ["/about.html" handler-about])
+
+    (def app
+      (-> (br/make-handler routes)
+        wrap-a
+        wrap-b))
+
 ## redirect
+
+    ;; br/Redirectは、bb/Matchedプロトコル準拠。
+    ["/articles" {"/new" my-handler
+                  "/old" (->br/Redirect
+                           307            ;; status
+                           my-handler)}]  ;; target
+
 ## resources
+
+    ;; br/Resources or br/ResourcesMaybe
+    ["/resources" (->ResourcesMaybe
+                    {:prefix "public/"
+                     :mime-types {"pdf" "application/pdf"
+                                  "txt" "text/plain"}})
+
+    ;; br/Files
+    ["pics/" (->Files {:dir "/tmp/pics"})]
+
 ## middleware
+
+    ;; br/WrapMiddleware
+    (bb/match-route
+        ["/index.html" (->br/WrapMiddleware handler wrap-a)]
+        "/index.html")
 
 # routesの検証
 

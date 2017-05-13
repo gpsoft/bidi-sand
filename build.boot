@@ -5,6 +5,7 @@
           :source-paths   #{"test"}
           :dependencies   '[[org.clojure/clojure "1.8.0"]
                             [bidi "2.1.0"]
+                            [ring/ring-mock "0.3.0"]
                             [adzerk/boot-test "RELEASE" :scope "test"]])
 
 (task-options!

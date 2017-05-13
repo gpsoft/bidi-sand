@@ -1,18 +1,30 @@
 (ns bidi-sand.core
   (:require [bidi.bidi :as bb]
-            [bidi.ring :as br]
-            [bidi.schema :as bs]))
+            [bidi.schema :as bs]
+            [ring.mock.request :as mock]))
+
+(defn- print-res
+  [rt res]
+  (println "ROUTES:")
+  (clojure.pprint/pprint rt)
+  (println "URL & RESULT:")
+  (clojure.pprint/pprint res))
 
 (defn- try-match
   [rt urls]
   (let [res (for [url urls]
-              [url (if (coll? url)
-                     (apply bb/match-route (concat [rt] url))
-                     (bb/match-route rt url))])]
-    (println "ROUTES:")
-    (clojure.pprint/pprint rt)
-    (println "URL & RESULT:")
-    (clojure.pprint/pprint res)))
+              [url (bb/match-route rt url)])]
+    (print-res rt res)))
+
+(defn- try-match*
+  [rt reqs]
+  (let [res (for [req reqs
+                  :let [url (:uri req)]]
+              [(:request-method req)
+               (:server-name req)
+               url
+               (:handler (bb/match-route* rt url req))])]
+    (print-res rt res)))
 
 (try-match
   ["/index.html" :index]
@@ -48,16 +60,16 @@
    "/hoge/30/fuga/piyopiyo"
    "/hoge/31/fuga/PiyoPiyo"])
 
-(try-match
+(try-match*
   ["/" {:get {"index.html" :index}
         {:request-method :post
          :server-name "mydom.com"} {"about.html" :about}
         {:request-method #{:post :put}
          :server-name #(> (count %) 10)} {"index.html" :long}}]
-  [["/index.html" :request-method :get]
-   ["/about.html" :request-method :post :server-name "mydom.com"]
-   ["/index.html" :request-method :put :server-name "longlong.com"]
-   ["/index.html" :request-method :put :server-name "short.com"]])
+  [(mock/request :get "/index.html")
+   (mock/request :post "http://mydom.com/about.html")
+   (mock/request :put "http://longlong.com/index.html")
+   (mock/request :put "http://short.com/index.html")])
 
 (try-match
   ["/" {["foo/" [keyword :db/ident] "/bar"] :index}]
@@ -101,4 +113,4 @@
         "misc/" {["hoge/" :id "/fuga/"
                   :name "/index.html"]  :hoge-index}}])
 
-(s/check bs/RoutePair routes)
+;; (s/check bs/RoutePair routes)
