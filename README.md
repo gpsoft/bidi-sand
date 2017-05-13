@@ -129,30 +129,38 @@ routingと逆引きに特化したライブラリ。
                     :server-name "short.com"    nil
 
 複数パターンを1つのハンドラへ。
+
     ROUTES:
-      ["/" {#{"index" "index.html"} :index}]
+      ["/" {#{"" "index" "index.html"} :index}]
 
     URL & RESULT:
+      "/"           {:handler :index}
       "/index.html" {:handler :index}
       "/index"      {:handler :index}
 
-逆引きすると…。
+逆引きのときは先頭のパターンを採用。といってもsetの先頭なので…。
 
     (bb/path-for
       ["/" {#{"index.html" "index"} :index}] :index)   ;;=> "/index"
 
-
-[#{:head :get} :index]
-[#{{:server-name "juxt.pro"}{:server-name "localhost"}}
- {"/index.html" :index}]
-
 ハンドラにタグ付けする。
-["/" [["foo" (-> foo-handler (tag :foo)]
-      [["bar/" :id] (-> bar-handler (tag :bar)]]]
+
+    ROUTES:
+      ["/" {"index.html" (bb/tag index-handler :index)
+            "about.html" (bb/tag about-handler :about)}]
+    URL & RESULT:
+      "/index.html" {:tag :index,
+                     :handler #function}
+      "/about.html" {:tag :about,
+                     :handler #function}
 
 逆引きの時にタグが使える。
-(path-for my-routes :foo)
-(path-for my-routes :bar :id "123")
+
+    (bb/path-for
+      ["/" {"index.html" (bb/tag index-handler :index)
+            "about.html" (bb/tag about-handler :about)}]
+      :about)       ;;=> "/about.html"
+
 
 # Ringで使う
 ## ハンドラ
@@ -161,6 +169,33 @@ routingと逆引きに特化したライブラリ。
 ## middleware
 
 # routesの検証
-`bb/route-seq`
-bidi.schema/RoutePair
-(schema.core/check bidi.schema/RoutePair routes)
+
+全routesを列挙。
+
+    (bb/route-seq
+      ["/" {"index.html" :index,
+            "about.html" :about,
+            "articles/" {"index.html"   :article-index,
+                         "article.html" :article}
+            "misc/" {["hoge/" :id "/fuga/"
+                      :name "/index.html"]         :hoge-index}}])
+    ;;=>
+    (#bidi.bidi.Route{:handler :index,
+                      :path ["/" "index.html"]}
+     #bidi.bidi.Route{:handler :about,
+                      :path ["/" "about.html"]}
+     #bidi.bidi.Route{:handler :article-index,
+                      :path ["/" "articles/" "index.html"]}
+     #bidi.bidi.Route{:handler :article,
+                       :path ["/" "articles/" "article.html"]}
+     #bidi.bidi.Route{:handler :hoge-index,
+                       :path ["/" "misc/" ["hoge/" :id "/fuga/" :name "/index.html"]]})
+
+
+`plumatic/schema`を使って、routesのスキーマを定義済み(`bidi.schema/RoutePair`)。
+
+    (require '[schema.core :as s])
+
+    (s/check bidi.schema/RoutePair routes)
+
+

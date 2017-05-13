@@ -67,12 +67,35 @@
 
 
 (try-match
-  ["/" {#{"index.html" "index"} :index}]
-  ["/index.html"
+  ["/" {#{"" "index.html" "index"} :index}]
+  ["/"
+   "/index.html"
    "/index"])
 
 (bb/path-for ["/" {#{"index.html" "index"} :index}] :index)
 
+(defn index-handler [req] nil)
+(defn about-handler [req] nil)
+(try-match
+  ["/" {"index.html" (bb/tag index-handler :index)
+        "about.html" (bb/tag about-handler :about)}]
+  ["/index.html"
+   "/about.html"])
 
+(bb/path-for
+  ["/" {"index.html" (bb/tag index-handler :index)
+        "about.html" (bb/tag about-handler :about)}]
+  about-handler)
 
+(bb/path-for
+  ["/" {"index.html" (bb/tag index-handler :index)
+        "about.html" (bb/tag about-handler :about)}]
+  :about)
 
+(bb/route-seq
+  ["/" {"index.html" :index,
+        "about.html" :about,
+        "articles/" {"index.html"   :article-index,
+                     "article.html" :article}
+        "misc/" {["hoge/" :id "/fuga/"
+                  :name "/index.html"]         :hoge-index}}])
