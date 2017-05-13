@@ -1,6 +1,7 @@
 (ns bidi-sand.core
   (:require [bidi.bidi :as bb]
-            [bidi.ring :as br]))
+            [bidi.ring :as br]
+            [bidi.schema :as bs]))
 
 (defn- try-match
   [rt urls]
@@ -95,7 +96,9 @@
 (bb/route-seq
   ["/" {"index.html" :index,
         "about.html" :about,
-        "articles/" {"index.html"   :article-index,
-                     "article.html" :article}
+        "articles/" {"index.html"       :article-index,
+                     "article.html"     :article}
         "misc/" {["hoge/" :id "/fuga/"
-                  :name "/index.html"]         :hoge-index}}])
+                  :name "/index.html"]  :hoge-index}}])
+
+(s/check bs/RoutePair routes)

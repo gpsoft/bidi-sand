@@ -6,17 +6,24 @@
 
 routingと逆引きに特化したライブラリ。
 
-- URLからハンドラへの対応
-- ハンドラからURLの生成
-
-
     https://github.com/juxt/bidi
     [bidi "2.1.0"]
+
+- URLからハンドラへの対応
+- ハンドラからURLの生成
 
 
 # 基本
 
     (require '[bidi.bidi :as bb])
+           ;; functions:
+           ;;   bb/match-route
+           ;;   bb/path-for
+           ;;   bb/tag
+           ;;   bb/route-seq
+           ;; protocols:
+           ;;   bb/Pattern
+           ;;   bb/Matched
 
 ベクタ(やマップ)でroutesを定義。
 
@@ -175,10 +182,10 @@ routingと逆引きに特化したライブラリ。
     (bb/route-seq
       ["/" {"index.html" :index,
             "about.html" :about,
-            "articles/" {"index.html"   :article-index,
-                         "article.html" :article}
+            "articles/" {"index.html"       :article-index,
+                         "article.html"     :article}
             "misc/" {["hoge/" :id "/fuga/"
-                      :name "/index.html"]         :hoge-index}}])
+                      :name "/index.html"]  :hoge-index}}])
     ;;=>
     (#bidi.bidi.Route{:handler :index,
                       :path ["/" "index.html"]}
